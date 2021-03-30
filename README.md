@@ -53,7 +53,7 @@ Un'ultima nota prima di iniziare: troverete errori ed imprecisioni e conto su di
 
 ### WebPack
 
-> WebPack è un bundler: un software che prende i file che vengono creati e le librerie che vengono utilizzate, ne ottimizza il codice e riunisce il tutto in un solo file che si può mettere online. Nella pratica noi creeremo un file _index.js_ che dipenderà anche da librerie esterne (axios, lodash); quello che verrà messo online nella demo, però, sarà un unico file _bundle.js_ che contiene tutto quanto. Ci permette anche di usare configurazioni diverse in base alla necessità: se stiamo sviluppando e facendo test useremo una configurazione, mentre per la versione finale che verrà messa online ne useremo un'altra.
+> WebPack è un bundler: un software che prende i file che vengono creati e le librerie che vengono utilizzate, ne ottimizza il codice e riunisce il tutto in un solo file che si può mettere online. Nella pratica noi creeremo un file _index.js_ che può dipendere anche da librerie esterne (axios, lodash); quello che verrà messo online nella demo, però, sarà un unico file _bundle.js_ che contiene tutto quanto. Ci permette anche di usare configurazioni diverse in base alla necessità: se stiamo sviluppando e facendo test useremo una configurazione, mentre per la versione finale che verrà messa online ne useremo un'altra.
 Per una guida più estensiva di WebPack vi rimando a quella di `@pablomicheletti#6410`, pubblicata su Discord!
 
 ### Environment Variables
@@ -63,7 +63,7 @@ Per farlo in locale useremo una libreria chiamata **webpack-dotenv**, mentre per
 
 ### API e chiamate asincrone
 
-> JavaScript ha fretta: non aspetta che una funzione abbia finito di fare il suo dovere prima di eseguire quella successiva, quindi se la seconda dipende dal risultato della prima l'applicazione non funziona. Esempio: funzione A si aspetta una serie di dati, quindi li va a cercare; funzione B utilizza quei dati ma non aspetta che A abbia finito di cercare, quindi usa una variabile vuota.. Non riuscendo a far nulla. Dobbiamo imparare a far star tranquillo JS con funzioni chiamate asincrone, cioè che aspettano qualcosa prima di continuare. **Axios** è una libreria che ci aiuterà ad eseguire le chiamate a risorse esterne con scioltezza.
+> JavaScript ha fretta: non aspetta che una funzione abbia finito di fare il suo dovere prima di eseguire quella successiva, quindi se la seconda dipende dal risultato della prima l'applicazione non funziona. Esempio: funzione A si aspetta una serie di dati, quindi li va a cercare; funzione B utilizza quei dati ma non aspetta che A abbia finito di cercare, quindi usa una variabile vuota.. Non riuscendo a far nulla. Dobbiamo imparare a far star tranquillo JS con funzioni chiamate asincrone, cioè che aspettano qualcosa prima di continuare. **Axios** è una libreria che ci può aiutare ad eseguire le chiamate a risorse esterne con scioltezza, ma in questa guida non la utilizzerò.
 
 ### Deployment
 
@@ -97,15 +97,13 @@ Andate nella cartella dove volete inizializzare il progetto ed aprite una CLI in
   - Procedura guidata che creerà un file package.json, che servirà a Node per gestire i moduli del progetto e gli script che verranno utilizzati da WebPack.
 - `npm install webpack webpack-cli dotenv-webpack html-webpack-plugin webpack-dev-server --save-dev`
   - NPM installerà i moduli che ci servono durante lo sviluppo (notare il comando *--save-dev* alla fine della riga)
-- `npm install axios`
-  - NPM installerà axios che verrà utilizzato anche in fase di produzione
 
 ![Configurazione NPM](assets/npminit.webp)
 
 Successivamente creeremo delle cartelle e file che useremo più tardi: fatelo subito e ne spiegherò l'uso quando diverranno necessari.
 I file da creare sono i seguenti (li riempiremo più tardi):
 
-- `getPollution.js` dentro a `netlify/functions`
+- `lambda.js` dentro a `netlify/functions`
 - `index.js`, `index_dev.js` e `index.html` in `src`
 - `.env`
 - `.env.example`
@@ -138,7 +136,7 @@ A fine procedimento la struttura della cartella sarà la seguente:
  ┃ ┣ ***[...]***  
  ┣ 📂netlify <>  
  ┃ ┣ 📂functions <>  
- ┃ ┃ ┣ 📜getPollution.js <>  
+ ┃ ┃ ┣ lambda.js <>  
  ┣ 📂***node_modules***  
  ┃ ┣ ***[...]***  
  ┣ 📂src <>  
@@ -248,9 +246,6 @@ Successivamente configuriamo Node dal file `package.json` per eseguire alcuni sc
     "webpack": "^5.26.3",
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2"
-  },
-  "dependencies": {
-    "axios": "^0.21.1"
   }
 }
 ```
@@ -363,18 +358,16 @@ Se può essere utile fatemi sapere e scriverò una guida sulla sincronia, mentre
 Per farlo dobbiamo incapsulare la richiesta in una funzione detta **ASINCRONA** che inseriremo in `src/index_dev.js`:
 
 ```javascript
-// importiamo una libreria che abbellisce e semplifica la sintassi della richiesta
-import axios from "axios"
-
 // le funzioni asincrone si dichiarano aggiungendo async prima dell'espressione
 async function requestPollutionData() {
   // la nostra chiave è al sicuro nelle Environment Variables
   const API_KEY = process.env.API_KEY
 
-  // la parola chiave è await: è quella che dice a JS di fermarsi a questa riga finchè axios non restituisce il risultato della richiesta
-  const result = await axios.get(`/* ... */${API_KEY}`) // non scriverò COME fare la richiesta, va capito dalla documentazione https://aqicn.org/json-api/doc/
+  // la parola chiave è await: è quella che dice a JS di fermarsi a questa riga finchè la fetch API non restituisce il risultato della richiesta
+  const response = await fetch(`/* ... */${API_KEY}`) // non scriverò COME fare la richiesta, va capito dalla documentazione https://aqicn.org/json-api/doc/
+  const data = await response.json()
 
-  console.log(result) // facciamo ciò che vogliamo con i dati ottenuti: scelta, elaborazione, visualizzazione..
+  console.log(data) // facciamo ciò che vogliamo con i dati ottenuti: scelta, elaborazione, visualizzazione..
 }
 
 requestPollutionData() 
@@ -400,11 +393,10 @@ Non entrerò nel dettaglio anche perchè io ho solo grattato la superficie di qu
 1) Andiamo a modificare `src/index.js`: prima lavoravamo su `index_dev.js` ma Netlify andrà a lavorare con i file di produzione, ed abbiamo istruito WebPack ad utilizzare il file `index.js` al posto di `index_dev.js` dentro a webpack.config.js [QUI](#webpackconfigjs); all'interno di `index.js` andremo a sostituire la chiamata che prima facevamo in `index_dev.js` in questo modo:
 
     ```javascript
-    import axios from "axios"
-
     async function callLambdaFunction() {
       // qui la magia: facciamo una chiamata ad una funzione che creeremo fra poco in un file a parte e che Netlify chiama dal proprio back-end in modo sicuro e privato quando necessario
-      const response = await axios.get("/.netlify/functions/getPollution")
+      const response = await fetch("/.netlify/functions/lambda")
+      const data = await response.json()
 
       console.log(response) // Facciamo ciò che vogliamo coi dati ottenuti
     } 
@@ -419,17 +411,16 @@ Non entrerò nel dettaglio anche perchè io ho solo grattato la superficie di qu
       functions = "./netlify/functions"
     ```
 
-3) Nella cartella `netlify/functions` modifichiamo il file `getPollution.js` in questo modo:
+3) Nella cartella `netlify/functions` modifichiamo il file `lambda.js` in questo modo:
 
     ```javascript
-    const axios = require("axios")
-
     exports.handler = async event => {
       // Più tardi imposteremo una variabile d'ambiente interna a Netlify stesso, accessibile semplicemente così:
       const API_KEY =  process.env.API_KEY
 
       // qui facciamo la chiamata alla API esattamente come la facevamo prima in index_dev.js
-      const response = await axios.get(/* ... */)
+      const response = await fetch(`endpoint/parameters&API_KEY=${API_KEY}`)
+      const data = await response.json() 
 
       // da qui in giù la funzione fa da back-end: elaboriamo dei dati e li rimandiamo al front-end in formato JSON con uno statusCode 200, cioè "successo".
       const pass = (body) => {
@@ -439,7 +430,7 @@ Non entrerò nel dettaglio anche perchè io ho solo grattato la superficie di qu
         }
       }
 
-      return pass(response)
+      return pass(data)
     }
     ```
 
