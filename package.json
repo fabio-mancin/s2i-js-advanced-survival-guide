@@ -1,0 +1,31 @@
+{
+  "name": "s2i-js-advanced-survival-guide",
+  "version": "1.0.0",
+  "description": "S2I JS Advanced Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabio-mancin/s2i-js-advanced-survival-guide.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fabio-mancin/s2i-js-advanced-survival-guide/issues"
+  },
+  "homepage": "https://github.com/fabio-mancin/s2i-js-advanced-survival-guide#readme",
+  "devDependencies": {
+    "dotenv-webpack": "^7.0.2",
+    "html-webpack-plugin": "^5.3.1",
+    "webpack": "^5.26.3",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
