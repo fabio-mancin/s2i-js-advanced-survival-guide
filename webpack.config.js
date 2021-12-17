@@ -13,7 +13,7 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'build')
     },
     devServer: {
-      contentBase: './build',
+      static: './build',
       open: true
     },
     plugins: [
